@@ -1,0 +1,8 @@
+[Unit]
+After=etcd-amb-postgresql.service
+
+[Service]
+ExecStart=/usr/bin/docker run -link etcd-amb-postgresql.service:etcd -v /var/run/docker.sock:/var/run/docker.sock -rm polvi/docker-register postgresql.service 5432  postgresql
+
+[X-Fleet]
+X-ConditionMachineOf=postgresql.service
