@@ -1,0 +1,26 @@
+[Unit]
+Description=Fivefilters discovery service
+
+# Requirements
+Requires=etcd.service
+Requires=fivefilters-http@%i.service
+
+# Dependency ordering and binding
+After=etcd.service
+After=fivefilters-http@%i.service
+BindsTo=fivefilters-http@%i.service
+
+[Service]
+# Get CoreOS environmental variables
+EnvironmentFile=/etc/environment
+
+ExecStart=/bin/sh -c "\
+        while true; do \
+                etcdctl set /services/website/fivefilters-%i '{ \"host\": \"%H\", \"port\": 49153}' --ttl 60;\
+                sleep 45;\
+        done"
+
+ExecStop=/usr/bin/etcdctl rm /services/website/fivefilters-%i
+
+[X-Fleet]
+X-ConditionMachineOf=fivefilters-http@%i.service

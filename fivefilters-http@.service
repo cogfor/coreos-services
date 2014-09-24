@@ -1,0 +1,34 @@
+[Unit]
+Description=Fivefilters
+
+# Requirements
+Requires=etcd.service
+Requires=docker.service
+Requires=fivefilters-discovery@%i.service
+
+# Dependency ordering
+After=etcd.service
+After=docker.service
+Before=fivefilters-discovery@%i.service
+
+[Service]
+User=core
+
+# Let processes take awhile to start up (for first run Docker containers)
+TimeoutStartSec=0
+
+# Change killmode from "control-group" to "none" to let Docker remove
+# work correctly.
+KillMode=none
+
+# Get CoreOS environmental variables
+EnvironmentFile=/etc/environment
+
+ExecStartPre=-/usr/bin/docker kill fivefilters-%i
+ExecStartPre=-/usr/bin/docker rm fivefilters-%i
+ExecStartPre=/usr/bin/docker pull dock.cogfor.com/fivefilters
+ExecStart=/usr/bin/docker run -rm --name fivefilters-%i -p 49153:80 dock.cogfor.com/fivefilters
+ExecStop=/usr/bin/docker stop fivefilters-%i
+
+[X-Fleet]
+Conflicts=fivefilters-http@*.service
