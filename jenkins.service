@@ -1,0 +1,27 @@
+[Unit]
+Description=Jenkins
+
+After=docker.service
+Requires=docker.service
+
+[Service]
+
+# Let processes take awhile to start up (for first run Docker containers)
+TimeoutStartSec=0
+
+# Change killmode from "control-group" to "none" to let Docker remove
+# work correctly.
+KillMode=none
+
+ExecStartPre=/bin/bash -c '\
+	if [ ! -d "/home/directory/data/jenkins" ]; then \
+		sudo /usr/bin/mkdir -p /home/core/data/jenkins; \
+		sudo /usr/bin/chown 102 /home/core/data/jenkins; \
+	fi'
+ExecStartPre=-/usr/bin/docker kill jenkins1
+ExecStartPre=-/usr/bin/docker rm jenkins1
+ExecStartPre=/usr/bin/docker pull jenkins
+ExecStart=/usr/bin/docker run --name jenkins1 -u root -p 8080:8080 -p 50000:50000 -v /home/core/data/jenkins:/var/jenkins_home jenkins 
+
+[X-Fleet]
+#Conflicts=jenkins.service
